@@ -1,12 +1,14 @@
 from flask import Blueprint, request, jsonify, session
-from app.models import User
+from app.models import User, Post, Comment, Vote
 from app.db import get_db
 import sys
 
 bp = Blueprint('api', __name__, url_prefix='/api')
 
+# Signup/Create new user
 @bp.route('/users', methods=['POST'])
 def signup():
+  # connect to database
   data = request.get_json()
   db = get_db()
   
@@ -27,7 +29,7 @@ def signup():
 
     # rollback and send error to front end
     db.rollback()
-    return jsonify(message= 'Signup failed'), 500
+    return jsonify(message = 'Signup failed'), 500
   
   session.clear()
   session['user_id'] = newUser.id
@@ -35,14 +37,17 @@ def signup():
 
   return jsonify(id = newUser.id)
 
+# Logout
 @bp.route('/users/logout', methods=['POST'])
 def logout():
   # remove sessions
   session.clear()
   return '', 204
 
+# Login
 @bp.route('/users/login', methods=['POST'])
 def login():
+  # connect to database
   data = request.get_json()
   db = get_db()
 
@@ -61,3 +66,32 @@ def login():
   session['loggedIn'] = True
 
   return jsonify(id = user.id)
+
+# Create new comment
+@bp.route('/comments', methods=['POST'])
+def comment():
+  # connect to database
+  data = request.get_json()
+  db = get_db()
+
+  try:
+    # new comment
+    newComment = Comment(
+      comment_text = data['comment_text'],
+      post_id = data['post_id'],
+      user_id = session.get('user_id')
+    )
+
+    # adds newComment to the database
+    db.add(newComment)
+    # commits database update
+    db.commit()
+  except:
+    print(sys.exc_info()[0])
+
+    # discards pending comment
+    db.rollback()
+    return jsonify(message = 'Comment failed'), 500
+  
+  return jsonify(id = newComment.id)
+

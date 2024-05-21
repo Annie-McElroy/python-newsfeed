@@ -18,7 +18,12 @@ def index():
 
 @bp.route('/login')
 def login():
-  return render_template('login.html')
+  # not logged in yet
+  if session.get('loggedIn') is None:
+    return render_template('login.html')
+  
+  # otherwise redirect to dashboard if logged in
+  return redirect('/dashboard')
 
 @bp.route('/post/<id>')
 def single(id):

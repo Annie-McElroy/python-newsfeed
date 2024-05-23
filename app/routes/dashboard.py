@@ -1,10 +1,12 @@
 from flask import Blueprint, render_template, session
 from app.models import Post
 from app.db import get_db
+from app.utils.auth import login_required
 
 bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
 
 @bp.route('/')
+@login_required
 def dash():
   db = get_db()
   # get all user's posts by querying Post and filtering by user_id given from session, order list by created_at
@@ -21,6 +23,7 @@ def dash():
     )
 
 @bp.route('/edit/<id>')
+@login_required
 def edit(id):
   # Query single post by id
   db = get_db()
